@@ -38,8 +38,13 @@ class value:
 
     def __pow__(self, other):
         assert isinstance(other, (int, float)), "only supporting int/float powers"
-        return value(self.data ** other, (self,), f"**{other}")
-
+        out = value(self.data ** other, (self,), f"**{other}")
+    
+        def _backward():
+            self.grad += (other * (self.data ** (other - 1))) * out.grad
+        out._backward = _backward
+        return out
+    
     def __neg__(self):
         return self *-1
 
@@ -47,11 +52,23 @@ class value:
         return self * (other ** -1)
 
     def exp(self):
-      return value(math.exp(self.data), (self,), "exp")
+            out = value(math.exp(self.data), (self,), "exp")
+
+            def _backward():
+                self.grad += out.data * out.grad
+            out._backward = _backward
+
+            return out
 
     def tanh(self):
-        t = math.tanh(self.data)
-        return value(t, (self,), "tanh")
+            t = math.tanh(self.data)
+            out = value(t, (self,), "tanh")
+
+            def _backward():
+                self.grad += (1.0 - t ** 2) * out.grad
+            out._backward = _backward
+
+            return out
 
     def __radd__(self, other):
         return self + other

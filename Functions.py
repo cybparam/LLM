@@ -55,23 +55,23 @@ class value:
         return self * (other ** -1)
 
     def exp(self):
-            out = value(math.exp(self.data), (self,), "exp")
+        out = value(math.exp(self.data), (self,), "exp")
 
-            def _backward():
-                self.grad += out.data * out.grad
-            out._backward = _backward
+        def _backward():
+            self.grad += out.data * out.grad
+        out._backward = _backward
 
-            return out
+        return out
 
     def tanh(self):
-            t = math.tanh(self.data)
-            out = value(t, (self,), "tanh")
+        t = math.tanh(self.data)
+        out = value(t, (self,), "tanh")
 
-            def _backward():
-                self.grad += (1.0 - t ** 2) * out.grad
-            out._backward = _backward
+        def _backward():
+            self.grad += (1.0 - t ** 2) * out.grad
+        out._backward = _backward
 
-            return out
+        return out
 
     def __radd__(self, other):
         return self + other
@@ -171,10 +171,10 @@ class vocab:
         return output
 
     def decode(self, output):
-            ait= []
-            for token in output:
-                ait.append(self.itos.get(token, "<UKN>"))
-            return ait
+        ait= []
+        for token in output:
+            ait.append(self.itos.get(token, "<UKN>"))
+        return ait
 
     def reghook(self, fn):
         self.hook.append(fn)
@@ -199,3 +199,38 @@ class embeddingtable:
             nrow = np.random.randn(1, self.embeddim) * 0.02
         self.weight = np.vstack([self.weight, nrow])
         self.vocabsize += 1
+
+class linear:
+
+    def __init__(self, indim, outdim):
+        self.indim = indim
+        self.outdim = outdim
+        self.weight = np.random.randn(indim, outdim) * 0.02
+        self.bias = np.zeros((1, outdim))
+
+    def forward(self, x):
+        self.prevx = x
+        return (x @ self.weight) + self.bias
+
+def softmax(logits, temp=1):
+    logits = logits / temp
+    t = np.exp(logits - np.max(logits, axis =  -1, keepdims = True))
+    return t / np.sum(t, axis = -1, keepdims = True)
+
+class layernorm:
+
+    def __init__(self, dim):
+        self.gamma = np.ones((1, dim))
+        self.beta = np.zeros((1, dim))
+        self.esp = 0.00001
+
+    def out(self, x):
+        var = np.var(x, axis = -1, keepdims = True) + self.esp
+        m = np.mean(x, axis = -1, keepdims = True)
+        x = (x - m) / np.sqrt(var)
+        return (self.gamma * x) + self.beta
+
+
+def gelu(x):
+    curve = np.tanh(math.sqrt(2/np.pi) * (x + (0.044715 * (x**3))))
+    return 0.5 * x * (1 + curve)

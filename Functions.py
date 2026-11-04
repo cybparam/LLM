@@ -232,5 +232,5 @@ class layernorm:
 
 
 def gelu(x):
-    curve = np.tanh(math.sqrt(2/np.pi) * (x + (0.044715 * (x**3))))
+    curve = np.tanh(np.sqrt(2/np.pi) * (x + (0.044715 * (x**3))))
     return 0.5 * x * (1 + curve)

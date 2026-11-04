@@ -1,5 +1,6 @@
 import Functions as fn
 import numpy as np
+import time
 
 tok, voc = fn.tokenizer(), fn.vocab()
 emb = fn.embeddingtable(len(voc.stoi), 8)
@@ -9,17 +10,18 @@ voc.reghook(emb.addhook)
 
 def runai(user):
     tokens = tok.tokenize(user)
-    output = voc.encode(tokens)
-    vectors = emb.forward(output)
-    out = ln.out(vectors)
-    print(out.shape, np.mean(out[0]), np.var(out[0]))
-    print(fn.gelu(np.array([[-3.0, 0.0, 3.0]])))
-    prob = fn.softmax(lin.forward(vectors))
-    print(prob.shape, np.sum(prob[0]))
-    ait = voc.decode(output)
-    ai = tok.detokenize(ait)
-    return ai
+    embeddings = emb.forward(voc.encode(tokens))
+    lin1 = fn.gelu(lin.forward(ln.out(embeddings)))
+    lin2 = fn.linear(16, emb.vocabsize)
+    softmax = fn.softmax(lin2.forward(lin1))
+    ai = np.random.choice(len(softmax[-1]), p = softmax[-1])
+    return voc.decode([ai])
 
 user = input("SAY HI!: ").lower()
-ai = runai(user)
-print(ai)
+for i in range(50):
+    ai = runai(user)
+    user += " "
+    user += tok.detokenize(ai)
+    if 0 in ai:
+        break
+    print(tok.detokenize(ai), end = " ")

@@ -199,6 +199,20 @@ class embeddingtable:
         self.weight = np.vstack([self.weight, nrow])
         self.vocabsize += 1
 
+class posembeddings:
+
+    def __init__(self, len, dim):
+        self.weight = np.random.randn(len, dim) * 0.02
+
+    def forward(self, tokens):
+        self.t = tokens.shape[0]
+        return tokens + self.weight[:self.t]    
+
+    def backward(self, dy):
+        self.dweight = np.zeros_like(self.weight)
+        self.dweight[:self.t] = dy
+        return dy
+
 class linear:
 
     def __init__(self, indim, outdim):
@@ -286,6 +300,8 @@ class adamw:
         self.layers = layers
 
     def updatepara(self, m, v, w, dw):
+        if np.shape(m) != w.shape:
+            m, v = 0, 0
         b1, b2, e, l = 0.9, 0.999, 10**-8, 0.01
         m = b1 * m + (1 - b1)*dw
         v = b2 * v + (1 - b2)*(dw**2)
@@ -293,7 +309,6 @@ class adamw:
         vh = v / (1 - (b2**self.t))
         w = w - self.lr * ((mh/(np.sqrt(vh) + e)) + l* w)
         return w, m, v
-    
 
     def step(self):
         self.t += 1
@@ -308,4 +323,26 @@ class adamw:
             if hasattr(layer, "beta"):
                 layer.beta, layer.mb, layer.vb = self.updatepara(layer.mb, layer.vb, layer.beta, layer.dbeta)
             if hasattr(layer, "gamma"):
-                layer.gamma, layer.mg, layer.vg = self.updatepara(layer.mw, layer.vw, layer.gamma, layer.dgamma)
+                layer.gamma, layer.mw, layer.vw = self.updatepara(layer.mw, layer.vw, layer.gamma, layer.dgamma)
+
+class selfattention:
+
+    def __init__(self, dim):
+        self.wq, self.wk, self.wv = linear(dim, dim), linear(dim, dim), linear(dim, dim)
+        self.dim = dim
+
+    def forward(self, x):
+        self.q, self.k, self.v, = self.wq.forward(x), self.wk.forward(x), self.wv.forward(x)
+        scores = (self.q @ self.k.T) /math.sqrt(self.dim)
+        mask = np.triu(np.ones(scores.shape) * -1e9, k=1)
+        self.probs = softmax(scores + mask)
+        return self.probs @ self.v
+    
+    def backward(self, dy):
+        dprobs = dy @ self.v.T
+        dv = self.probs.T @ dy
+        dscores = (self.probs * (dprobs - np.sum(self.probs * dprobs, axis = 1, keepdims = True))) / math.sqrt(self.dim)
+        dq = dscores @ self.k
+        dk = dscores.T @ self.q
+        dxq, dxk, dxv = self.wq.backward(dq), self.wk.backward(dk), self.wv.backward(dv) 
+        return dxq + dxk + dxv

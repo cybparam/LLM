@@ -346,3 +346,25 @@ class selfattention:
         dk = dscores.T @ self.q
         dxq, dxk, dxv = self.wq.backward(dq), self.wk.backward(dk), self.wv.backward(dv) 
         return dxq + dxk + dxv
+
+class residualhighway:
+
+    def __init__(self, dim):
+        self.ln1 = layernorm(dim)
+        self.ln2 = layernorm(dim)
+        self.linup = linear(dim, dim * 4)
+        self.lindown = linear(dim * 4, dim)
+        self.att = selfattention(dim)
+        self.gelu = GELU()
+
+    def ffn(self, h):
+        return self.lindown.forward(self.gelu.forward(self.linup.forward(h)))
+
+    def forward(self, tokens):
+        h = tokens + self.att.forward(self.ln1.forward(tokens))
+        return h + self.ffn(self.ln2.forward(h))
+
+    def backward(self, dy):
+        dy = self.ln2.backward(self.linup.backward(self.gelu.backward(self.lindown.backward(dy)))) + dy
+        dy= self.ln1.backward(self.att.backward(dy)) + dy
+        return dy

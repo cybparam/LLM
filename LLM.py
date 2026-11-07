@@ -6,15 +6,17 @@ user = input("User: ").lower()
 tok = fn.tokenizer()
 voc = fn.vocab()
 emb = fn.embeddingtable(len(voc.stoi), 8)
-posemb = fn.posembeddings(128, 8)
+posemb = fn.posembeddings(1024, 8)
 lin1 = fn.linear(8, 16)
 lin2 = fn.linear(16, emb.vocabsize)
 ln = fn.layernorm(8)
 gelu = fn.GELU()
 atten = fn.selfattention(8)
+reshigh = fn.residualhighway(8)
 voc.reghook(emb.addhook)
 voc.reghook(lin2.addhook)
 optimizer = fn.adamw([emb, posemb, ln, atten.wq, atten.wk, atten.wv, lin1, lin2], 0.05)
+
 
 def forward(tokens):
     return lin2.forward(gelu.forward(lin1.forward(atten.forward(ln.forward(posemb.forward(emb.forward(tokens[:-1])))))))

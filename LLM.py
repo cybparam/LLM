@@ -52,7 +52,7 @@ def forward(tokens):
 def backward(dy):
     return emb.backward(posemb.backward(reshigh.backward(ln.backward(lin.backward(dy)))))
 
-print("//exit for exit")
+print("XX Type //exit to exit chat XX")
 while True:
     user = input("User: ").lower()
 

@@ -6,7 +6,7 @@ tok = fn.tokenizer()
 voc = fn.vocab()
 
 try:
-    with open("vocabulary.json", "r") as file:
+    with open("Training_data/vocabulary.json", "r") as file:
         vocabulary = json.load(file)
         voc.stoi = {k: int(v) for k, v in vocabulary.items()}
         voc.itos = {int(v): k for k, v in vocabulary.items()}
@@ -25,8 +25,8 @@ layers = [emb, posemb, ln, reshigh.atten.wq, reshigh.atten.wk, reshigh.atten.wv,
 optimizer = fn.adamw(layers, 0.05)
 
 try:
-    for layer in layers:
-        data = np.load(f"Training_data.{layer}.npz")
+    for i, layer in enumerate(layers):
+        data = np.load(f"Training_data/layer_{i}.npz")
         if hasattr(layer, "weight"):
             layer.weight = data["weight"]
         if hasattr(layer, "bias"):
@@ -41,16 +41,18 @@ except FileNotFoundError:
 def forward(tokens):
     return lin.forward(ln.forward(reshigh.forward(posemb.forward(emb.forward(tokens[:-1])))))
 
-user = input("User: ").lower()
-tokens = voc.encode(tok.tokenize(user))
-ai = []
-
+print("XX Type //exit to exit chat XX")
 while True:
-    prob = fn.softmax(forward(tokens))
-    ait = np.random.choice(len(prob[-1]), p = prob[-1])
-    if ait == 0:
-        break
-    ai.append(ait)
-    tokens.insert(-1, ait)
+    user = input("User: ").lower()
+    tokens = voc.encode(tok.tokenize(user))
+    ai = []
 
-print(tok.detokenize(voc.decode(ai)))
+    while True:
+        prob = fn.softmax(forward(tokens))
+        ait = np.random.choice(len(prob[-1]), p = prob[-1])
+        if ait == 0:
+            break
+        ai.append(ait)
+        tokens.insert(-1, ait)
+
+    print(tok.detokenize(voc.decode(ai)))

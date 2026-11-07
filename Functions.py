@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-learn = True
+learn = False
 
 class value:
 
@@ -199,6 +199,9 @@ class embeddingtable:
         self.weight = np.vstack([self.weight, nrow])
         self.vocabsize += 1
 
+    def save(self, path):
+        np.savez(path, weight=self.weight)
+
 class posembeddings:
 
     def __init__(self, len, dim):
@@ -212,6 +215,9 @@ class posembeddings:
         self.dweight = np.zeros_like(self.weight)
         self.dweight[:self.t] = dy
         return dy
+
+    def save(self, path):
+        np.savez(path, weight=self.weight)
 
 class linear:
 
@@ -236,6 +242,9 @@ class linear:
         self.weight = np.hstack([self.weight, ncol])
         self.bias = np.hstack([self.bias, np.zeros((1, 1))])
         self.outdim += 1
+
+    def save(self, path):
+        np.savez(path, weight=self.weight, bias=self.bias)
         
 def softmax(logits, temp=1):
     logits = logits / temp
@@ -268,6 +277,9 @@ class layernorm:
         t2 = t5 + t4
         t3 = self.dim * dx
         return t1 * (t3 - t2)
+
+    def save(self, path):
+        np.savez(path, gamma=self.gamma, beta=self.beta)
     
 class GELU:
 
@@ -354,17 +366,17 @@ class residualhighway:
         self.ln2 = layernorm(dim)
         self.linup = linear(dim, dim * 4)
         self.lindown = linear(dim * 4, dim)
-        self.att = selfattention(dim)
+        self.atten = selfattention(dim)
         self.gelu = GELU()
 
     def ffn(self, h):
         return self.lindown.forward(self.gelu.forward(self.linup.forward(h)))
 
     def forward(self, tokens):
-        h = tokens + self.att.forward(self.ln1.forward(tokens))
+        h = tokens + self.atten.forward(self.ln1.forward(tokens))
         return h + self.ffn(self.ln2.forward(h))
 
     def backward(self, dy):
         dy = self.ln2.backward(self.linup.backward(self.gelu.backward(self.lindown.backward(dy)))) + dy
-        dy= self.ln1.backward(self.att.backward(dy)) + dy
+        dy= self.ln1.backward(self.atten.backward(dy)) + dy
         return dy

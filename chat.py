@@ -14,15 +14,27 @@ except FileNotFoundError:
     print("No Training Data Found. Cannot run the model")
     exit()
 
-emb = fn.embeddingtable(len(voc.stoi), 8)
-posemb = fn.posembeddings(1024, 8)
-lin = fn.linear(8, emb.vocabsize)
-ln = fn.layernorm(8)
-reshigh = fn.residualhighway(8)
+emb = fn.embeddingtable(len(voc.stoi), 128)
+posemb = fn.posembeddings(500, 128)
+lin = fn.linear(128, emb.vocabsize)
+ln = fn.layernorm(128)
+blocks = [fn.residualhighway(128) for _ in range(5)]
 voc.reghook(emb.addhook)
 voc.reghook(lin.addhook)
-layers = [emb, posemb, ln, reshigh.atten.wq, reshigh.atten.wk, reshigh.atten.wv, reshigh.linup, reshigh.lindown, reshigh.ln1, reshigh.ln2, lin]
-optimizer = fn.adamw(layers, 0.05)
+layer1 = []
+
+for reshigh in blocks:
+    layer1.append(reshigh.atten.wq)
+    layer1.append(reshigh.atten.wk)
+    layer1.append(reshigh.atten.wv)
+    layer1.append(reshigh.linup)
+    layer1.append(reshigh.lindown)
+    layer1.append(reshigh.ln1)
+    layer1.append(reshigh.ln2)
+
+layer2 = [emb, posemb, ln, lin]
+layers = layer2 + layer1
+
 
 try:
     for i, layer in enumerate(layers):
@@ -39,11 +51,18 @@ except FileNotFoundError:
     exit()
 
 def forward(tokens):
-    return lin.forward(ln.forward(reshigh.forward(posemb.forward(emb.forward(tokens[:-1])))))
+    vectors = posemb.forward(emb.forward(tokens[:-1]))
+    for b in blocks:
+        vectors = b.forward(vectors)
+    return lin.forward(ln.forward(vectors))
 
 print("XX Type //exit to exit chat XX")
 while True:
     user = input("User: ").lower()
+    
+    if "//exit" in user:
+        break
+
     tokens = voc.encode(tok.tokenize(user))
     ai = []
 
@@ -54,5 +73,7 @@ while True:
             break
         ai.append(ait)
         tokens.insert(-1, ait)
+        if len(ai) > 499:
+            break
 
     print(tok.detokenize(voc.decode(ai)))

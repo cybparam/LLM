@@ -47,8 +47,8 @@ class vocab:
 
     def __init__(self):
         self.hook = []
-        self.stoi = {"<EOS>": 0, "<BOS>": 1, "<UKN>": 2, "<PAD>":3}
-        self.itos = {0: "<EOS>", 1:"<BOS>", 2: "<UKN>", 3: "<PAD>"}
+        self.stoi = {"<EOS>": 0, "<BOS>": 1, "<UKN>": 2, "<PAD>":3, "<sep>": 4}
+        self.itos = {0: "<EOS>", 1:"<BOS>", 2: "<UKN>", 3: "<PAD>", 4: "<sep>"}
 
     def encode(self, tokens):
         output = []
@@ -243,6 +243,10 @@ class adamw:
                 layer.beta, layer.mb, layer.vb = self.updatepara(layer.mb, layer.vb, layer.beta, layer.dbeta)
             if hasattr(layer, "gamma"):
                 layer.gamma, layer.mw, layer.vw = self.updatepara(layer.mw, layer.vw, layer.gamma, layer.dgamma)
+
+    def save(self, path):
+        for i, layer in enumerate(self.layers):
+            np.savez(f"{path}layer_{i}.npz", mw=layer.mw, vw=layer.vw, mb=layer.mb, vb=layer.vb)
 
 class selfattention:
 

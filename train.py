@@ -133,24 +133,29 @@ def progress_bar(current, total, loss, speed, start):
 
 print("Starting Training....")
 for epoch in range(50):
-    random.shuffle(data_set)
-    totalloss = 0.0
-    start = time.time()
-    progress_bar(0, len(data_set), 0.0, 0.0, start)
-    for i, tokens in enumerate(data_set):
-        prob = fn.softmax(forward(tokens))
-        loss, dy = fn.crossentropy(prob, tokens[1:])
-        dx = backward(dy)
-        optimizer.step()
-        totalloss += loss
-        if (i + 1) % 1 == 0 or i == len(data_set) - 1:
-            elapsed = time.time() - start
-            speed = (i + 1) / elapsed
-            progress_bar(i + 1, len(data_set), totalloss / (i + 1), speed, start)
-    totalloss = totalloss / len(data_set)
-    print()
-    print(f"Epoch: {epoch} | Loss: {totalloss}")
-    save(layers)
+    try:
+        random.shuffle(data_set)
+        totalloss = 0.0
+        start = time.time()
+        progress_bar(0, len(data_set), 0.0, 0.0, start)
+        for i, tokens in enumerate(data_set):
+            prob = fn.softmax(forward(tokens))
+            loss, dy = fn.crossentropy(prob, tokens[1:])
+            dx = backward(dy)
+            optimizer.step()
+            totalloss += loss
+            if (i + 1) % 1 == 0 or i == len(data_set) - 1:
+                elapsed = time.time() - start
+                speed = (i + 1) / elapsed
+                progress_bar(i + 1, len(data_set), totalloss / (i + 1), speed, start)
+        totalloss = totalloss / len(data_set)
+        print()
+        print(f"Epoch: {epoch} | Loss: {totalloss}")
+        save(layers)
+    except KeyboardInterrupt:
+        print("Saving Progress...")
+        save(layers)
+        exit()
 
 print("Training Complete. Saving Data...")
 save(layers)

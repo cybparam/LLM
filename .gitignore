@@ -2,3 +2,4 @@
 **/.venv/
 *.py[cod]
 **/Training/
+**/Training_data/

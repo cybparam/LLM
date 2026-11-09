@@ -64,16 +64,17 @@ while True:
         break
 
     tokens = voc.encode(tok.tokenize(user))
+    tokens.insert(-1, 4)
     ai = []
-
+    print("AI: ", end=" ")
     while True:
         prob = fn.softmax(forward(tokens))
         ait = np.random.choice(len(prob[-1]), p = prob[-1])
-        if ait == 0:
+        if ait == 0 or ait == 4:
             break
+        print(tok.detokenize(voc.decode([ait])), end = " ", flush=True)
         ai.append(ait)
         tokens.insert(-1, ait)
-        if len(ai) > 499:
+        if len(tokens) > 500:
             break
-
-    print(tok.detokenize(voc.decode(ai)))
+    print()

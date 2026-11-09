@@ -4,8 +4,19 @@ import random
 import json
 import time
 import sys
+import os
 
 fn.learn = True
+
+try:
+    with open("Training_data/epoch.txt", "r") as file:
+        epochnum = file.read()
+        epochnum = int(epochnum)
+except FileNotFoundError:
+    print("Epoch Number Not Found!")
+    epochnum = 4
+
+os.makedirs("Training_data/current/Training_Progress/", exist_ok=True)
 
 tok = fn.tokenizer()
 voc = fn.vocab()
@@ -57,7 +68,7 @@ optimizer = fn.adamw(layers, 0.005)
 
 try:
     for i, layer in enumerate(layers):
-        data = np.load(f"Training_data/layer_{i}.npz")
+        data = np.load(f"Training_data/current/layer_{i}.npz")
         if hasattr(layer, "weight"):
             layer.weight = data["weight"]
         if hasattr(layer, "bias"):
@@ -77,19 +88,12 @@ except FileNotFoundError:
     print("Starting with step 0")
 try:
     for i, layer in enumerate(layers):
-        data = np.load(f"Training_data/Training_Progress/layer_{i}.npz")
-        if hasattr(layer, "weight"):
-            layer.mw = data["mw"]
-            layer.vw = data["vw"]
-        if hasattr(layer, "bias"):
-            layer.mb = data["mb"]
-            layer.vb = data["vb"]
-        if hasattr(layer, "gamma"):
-            layer.mw = data["mw"]
-            layer.vw = data["vw"]
-        if hasattr(layer, "beta"):
-            layer.mb = data["mb"]
-            layer.vb = data["vb"]
+        data = np.load(f"Training_data/current/Training_Progress/layer_{i}.npz")
+        layer.mw = data["mw"]
+        layer.vw = data["vw"]
+        layer.mb = data["mb"]
+        layer.vb = data["vb"]
+
 except FileNotFoundError:
     print("Training Progress not found! Starting All Over...")
 
@@ -105,19 +109,28 @@ def backward(dy):
         grad = b.backward(grad)
     return emb.backward(posemb.backward(grad))
 
-def save(layers):
+def save(layers, epochnum):
     with open("Training_data/vocabulary.json", "w") as file:
         json.dump(voc.stoi, file)
 
     for i, layer in enumerate(layers):
-        layer.save(f"Training_data/layer_{i}.npz")
+        layer.save(f"Training_data/current/layer_{i}.npz")
 
     with open("Training_data/step.txt", "w") as file:
         file.write(str(optimizer.t))
 
-    optimizer.save(f"Training_data/Training_Progress/")
+    optimizer.save(f"Training_data/current/Training_Progress/")
+
+    with open("Training_data/epoch.txt", "w") as file:
+        file.write(str(epochnum))
 
     print("Saved CheckPoint")
+
+def savesnap(epochnum):
+    os.makedirs(f"Training_data/{epochnum}/", exist_ok=True)
+    for i, layer in enumerate(layers):
+        layer.save(f"Training_data/{epochnum}/layer_{i}.npz")
+    print("Snapshot saved!")
 
 def progress_bar(current, total, loss, speed, start):
     width = 30
@@ -128,11 +141,11 @@ def progress_bar(current, total, loss, speed, start):
     icon = spinner[current % len(spinner)]
     elapsed = time.time() - start
     eta = (total - current) / speed if speed > 0 else 0
-    sys.stdout.write(f"\r{icon} [{bar}] {percent*100:5.1f}% "f"| {current}/{total} " f"| Loss: {loss:.5f} "f"| ETA: {eta/60:.1f} min")
+    sys.stdout.write(f"\r{icon} |{bar}| {percent*100:5.1f}% "f"| {current}/{total} " f"| Loss: {loss:.5f} "f"| ETA: {eta/60:.1f} min")
     sys.stdout.flush()
 
 print("Starting Training....")
-for epoch in range(50):
+for epoch in range(epochnum, 51):
     try:
         random.shuffle(data_set)
         totalloss = 0.0
@@ -151,12 +164,14 @@ for epoch in range(50):
         totalloss = totalloss / len(data_set)
         print()
         print(f"Epoch: {epoch} | Loss: {totalloss}")
-        save(layers)
+        save(layers, epoch + 1)
+        savesnap(epoch)
     except KeyboardInterrupt:
+        print()
         print("Saving Progress...")
-        save(layers)
+        save(layers, epoch)
         exit()
 
 print("Training Complete. Saving Data...")
-save(layers)
+save(layers, epoch + 1)
 print("All Set!")

@@ -38,7 +38,7 @@ layers = layer2 + layer1
 
 try:
     for i, layer in enumerate(layers):
-        data = np.load(f"Training_data/layer_{i}.npz")
+        data = np.load(f"Training_data/current/layer_{i}.npz")
         if hasattr(layer, "weight"):
             layer.weight = data["weight"]
         if hasattr(layer, "bias"):
@@ -47,7 +47,7 @@ try:
             layer.gamma = data["gamma"]
             layer.beta = data["beta"]
 except FileNotFoundError:
-    print("Training Data not found! initialising data...")
+    print("Training Data not found!")
     exit()
 
 def forward(tokens):

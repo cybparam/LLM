@@ -123,18 +123,12 @@ def progress_bar(current, total, loss, speed, start):
     width = 30
     percent = current / total
     filled = int(width * percent)
-    bar = "█" * filled + "░" * (width - filled)
+    bar = "█" * filled + "-" * (width - filled)
     spinner = "|/-\\"
     icon = spinner[current % len(spinner)]
     elapsed = time.time() - start
     eta = (total - current) / speed if speed > 0 else 0
-
-    sys.stdout.write(
-        f"\r{icon} [{bar}] {percent*100:5.1f}% "
-        f"| {current}/{total} "
-        f"| Loss: {loss:.5f} "
-        f"| ETA: {eta/60:.1f} min"
-    )
+    sys.stdout.write(f"\r{icon} [{bar}] {percent*100:5.1f}% "f"| {current}/{total} " f"| Loss: {loss:.5f} "f"| ETA: {eta/60:.1f} min")
     sys.stdout.flush()
 
 print("Starting Training....")
@@ -142,17 +136,19 @@ for epoch in range(50):
     random.shuffle(data_set)
     totalloss = 0.0
     start = time.time()
-    for tokens in data_set:
+    progress_bar(0, len(data_set), 0.0, 0.0, start)
+    for i, tokens in enumerate(data_set):
         prob = fn.softmax(forward(tokens))
         loss, dy = fn.crossentropy(prob, tokens[1:])
         dx = backward(dy)
         optimizer.step()
         totalloss += loss
-        if (i + 1) % 10 == 0 or i == len(data_set) - 1:
+        if (i + 1) % 1 == 0 or i == len(data_set) - 1:
             elapsed = time.time() - start
             speed = (i + 1) / elapsed
             progress_bar(i + 1, len(data_set), totalloss / (i + 1), speed, start)
     totalloss = totalloss / len(data_set)
+    print()
     print(f"Epoch: {epoch} | Loss: {totalloss}")
     save(layers)
 

@@ -221,7 +221,7 @@ class adamw:
     def updatepara(self, m, v, w, dw):
         if np.shape(m) != w.shape:
             m, v = 0, 0
-        b1, b2, e, l = 0.9, 0.999, 10**-8, 0.01
+        b1, b2, e, l = 0.9, 0.999, 10**-8, 0.0001
         m = b1 * m + (1 - b1)*dw
         v = b2 * v + (1 - b2)*(dw**2)
         mh = m / (1 - (b1**self.t))

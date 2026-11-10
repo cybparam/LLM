@@ -1,5 +1,12 @@
 **/__pycache__/
 **/.venv/
 *.py[cod]
-**/Training/
-**/Training_data/
+**/Training/test.txt
+**/Training_data/4
+**/Training_data/5
+**/Training_data/6
+**/Training_data/7
+**/Training_data/8
+**/Training_data/9
+**/Training_data/10
+**/Training_data/epoch_1-3

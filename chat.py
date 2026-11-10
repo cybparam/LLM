@@ -68,7 +68,7 @@ while True:
     ai = []
     print("AI: ", end=" ")
     while True:
-        prob = fn.softmax(forward(tokens))
+        prob = fn.softmax(forward(tokens), 0.5)
         ait = np.random.choice(len(prob[-1]), p = prob[-1])
         if ait == 0 or ait == 4:
             break

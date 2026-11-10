@@ -64,7 +64,7 @@ for reshigh in blocks:
 
 layer2 = [emb, posemb, ln, lin]
 layers = layer2 + layer1
-optimizer = fn.adamw(layers, 0.005)
+optimizer = fn.adamw(layers, 0.0005)
 
 try:
     for i, layer in enumerate(layers):

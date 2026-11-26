@@ -1,38 +1,52 @@
-# LLM
-A Self Made LLM Which can Be Fed Data sets to get trained. So called the baby brain ai :)
+# GPT
 
-#############
-Passed the first test now enter a sentence and the brain will predeict a word. it will be gibberish and based in the vocab you entered but yeah it will reply you
+A self-made LLM which can be fed datasets to get trained. So-called the baby brain AI :)
 
-#############
-Passed the second test.
-Now enter content the brain will learn that content in a loop which runs 100 times ad then enter first few words of the inputagain and ai will reply with remaining complete sentence
+---
 
---Before the fial test run. Added self attention and positioanl embeddings so now the repeated words wont cause any issue
+### First Test — Passed
+Enter a sentence and the brain will predict a word. It will be gibberish and based on the vocabulary you entered, but yeah, it will reply.
 
-#############
-Passed The final test run
-Now the model can remember what was it trained on.
+### Second Test — Passed
+Now enter content. The brain will learn that content in a loop that runs 100 times. Then enter the first few words of the input again, and the AI will reply with the remaining sentence.
 
-###############
-added residual highway class with forward and backward functioon to create multiple neural layers by just stacking them
+### Before the Final Test
+Added self-attention and positional embeddings, so repeated words won't cause any issues.
 
-###############
-So the final brain is complete and i've trained this on 10 epoch cycle for now. due to hardware limitation and 2D tensor nature of the architecture. Each epoch cycle take about 100 min to train still the training loss is of 3.9 till now. Created a validation.py file to validate the brain'sresponses using the validation.txt file with learn = false and no optimizer/save/backward passes. 
+### Final Test — Passed
+Now the model can remember what it was trained on.
 
-{Attaching All the code files with training data of 10th epoch with training progress to resume training}
+### Residual Highway
+Added a residual highway class with forward and backward functions to create multiple neural layers just by stacking them.
 
-Also If you find any bug, related to why the training is so slow like even on 10th epoch the loss is near 4 pls lmk.
+### Training Progress
+The final brain is complete, and I've trained it for 10 epochs for now. Due to hardware limitations and the 2D tensor nature of the architecture, each epoch takes about 100 minutes to train. The training loss is still around 3.9.
 
-The chat.py can now reply and do a soewhere meaningful conversation but mostly the replies dont make sense.
+Created a `validation.py` file to validate the brain's responses using the `validation.txt` file with `learn = false` and no optimizer, save, or backward passes.
 
-Pls lmk the bug in any files and any limitations in this code and training/chat or brain's overall architecture.
+The `chat.py` can now reply with somewhat meaningful conversation, but most replies still don't make sense.
 
-*************************
+---
+
+### Project Paused
+
 Stopping this project right now! Exams nearby!!
 
-Will resume and upgrade this brain with capabilities of 4D tensors processing TO make this multihead and batch wise processing.this will eventually increase the training speed optimising the absolute limit of the hardware. 
-The will also result in brain to learn more features like grammer, past context, and userinput's context
-*************************
+Will resume and upgrade this brain with 4D tensor processing to make it multi-head and capable of batch-wise processing.
 
-The next Plan is to upgradethe whole brain with pytorch......
+The next plan is to upgrade the whole brain with PyTorch.
+
+---
+
+### Current Limitations & Flaws
+
+- CPU-only computation; no GPU acceleration.
+- Single-head self-attention architecture.
+- 2D tensor-based processing.
+- No batch-wise training or processing.
+- Slow training, taking approximately 100 minutes per epoch.
+- Limited contextual understanding.
+- Inconsistent grammar and sentence generation.
+- Poor conversational coherence.
+- Limited training, with only 10 epochs completed.
+- Model performance is constrained by the current architecture and available hardware.
